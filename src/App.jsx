@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function App() {
   const [politicians, setPoliticians] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3333/politicians")
@@ -10,13 +11,30 @@ export default function App() {
       .catch((err) => console.error(err));
   }, []);
 
-  console.log(politicians);
+  const filteredPoliticians = useMemo(() => {
+    return politicians.filter((politician) => {
+      const isInName = politician.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const isInBio = politician.biography
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      return isInName || isInBio;
+    });
+  }, [politicians, search]);
 
   return (
     <>
       <h1>Lista dei politici</h1>
+      <input
+        className="search"
+        type="text"
+        placeholder="Cerca per nome o biografia"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       <div className="container">
-        {politicians.map((politician) => (
+        {filteredPoliticians.map((politician) => (
           <div key={politician.id} className="card">
             <img src={politician.image} alt={politician.name} />
             <h2>{politician.name}</h2>
