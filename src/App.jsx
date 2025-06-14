@@ -21,6 +21,7 @@ const MemoPoliticianCard = memo(PoliticianCard);
 export default function App() {
   const [politicians, setPoliticians] = useState([]);
   const [search, setSearch] = useState("");
+  const [selectedPosition, setSelectPosition] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3333/politicians")
@@ -28,6 +29,15 @@ export default function App() {
       .then((data) => setPoliticians(data))
       .catch((err) => console.error(err));
   }, []);
+
+  const positions = useMemo(() => {
+    return politicians.reduce((acc, p) => {
+      if (!acc.includes(p.position)) {
+        return [...acc, p.position];
+      }
+      return acc;
+    }, []);
+  }, [politicians]);
 
   const filteredPoliticians = useMemo(() => {
     return politicians.filter((politician) => {
@@ -37,9 +47,11 @@ export default function App() {
       const isInBio = politician.biography
         .toLowerCase()
         .includes(search.toLowerCase());
-      return isInName || isInBio;
+      const isValidPosition =
+        selectedPosition === "" || selectedPosition === politician.position;
+      return (isInName || isInBio) && isValidPosition;
     });
-  }, [politicians, search]);
+  }, [politicians, search, selectedPosition]);
 
   return (
     <>
@@ -51,6 +63,17 @@ export default function App() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+      <select
+        value={selectedPosition}
+        onChange={(e) => setSelectPosition(e.target.value)}
+      >
+        <option value="">Seleziona posizione</option>
+        {positions.map((position, index) => (
+          <option key={index} value={position}>
+            {position}
+          </option>
+        ))}
+      </select>
       <div className="container">
         {filteredPoliticians.map((politician) => (
           <MemoPoliticianCard key={politician.id} {...politician} />
